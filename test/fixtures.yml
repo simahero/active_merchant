@@ -1176,7 +1176,7 @@ simple_pay:
   merchantID: 'PUBLICTESTHUF'
   merchantKEY: 'FxDa5w314kLlNseq2sKuVwaqZshZT5d6'
   redirectURL: 'https://127.0.0.1'
-
+  timeout: 10
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:
   login: X

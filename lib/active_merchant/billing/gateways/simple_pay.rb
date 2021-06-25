@@ -46,11 +46,10 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://simplepay.hu/'
       self.display_name = 'Simple Pay'
 
-      class_attribute :sdkVersion, :language, :allowed_ip, :returnRequest
+      class_attribute :sdkVersion, :language, :allowed_ip
       self.sdkVersion = 'SimplePayV2.1_Payment_PHP_SDK_2.0.7_190701:dd236896400d7463677a82a47f53e36e'
       self.language = 'HU'
       self.allowed_ip = '94.199.53.96'
-      self.returnRequest = false
 
       STANDARD_ERROR_CODE_MAPPING = {
         '0'    => 'Sikeres művelet',
@@ -203,9 +202,6 @@ module ActiveMerchant #:nodoc:
         if !options.key?(:urls)
           requires!(options, :redirectURL)
         end
-        if !options.key?(:returnRequest)
-          self.returnRequest = options[:returnRequest]
-        end
         super
       end
 
@@ -223,9 +219,12 @@ module ActiveMerchant #:nodoc:
       end
 
       #credit card?
-      def authorize(amount, options = {})
+      def authorize(amount, credit_card, options = {})
         post = {}
         post[:total] = amount
+        if credit_card
+          add_credit_card_data(post, credit_card)
+        end
         generate_post_data(:authorize, post, options)
         commit(:authorize, JSON[post])
       end
@@ -618,17 +617,20 @@ module ActiveMerchant #:nodoc:
           if test?
             return 'OK'
           end
-          if self.returnRequest
+          if @options[:returnRequest]
             return [parameters, response]
           end
           return response
         else
+          if test?
+            return 'FAIL'
+          end
           errors = []
           if response["errorCodes"].length > 0
             response["errorCodes"].each do |error|
               errors << STANDARD_ERROR_CODE_MAPPING[error.to_s]
             end
-            if self.returnRequest
+            if @options[:returnRequest]
               return [parameters, errors]
             end
             return errors

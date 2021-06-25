@@ -14,7 +14,7 @@ class RemoteSimplePayTest < Test::Unit::TestCase
       :verification_value  => '579'
     )
     @declined_card = CreditCard.new(
-      :number     => '4908366099900424',
+      :number     => '4111111111111111',
       :month      => '10',
       :year       => '2021',
       :first_name => 'v2 AUTO',
@@ -42,7 +42,7 @@ class RemoteSimplePayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, nil, @options)
     assert_success response
     assert_equal 'OK', response.message
   end
@@ -51,7 +51,57 @@ class RemoteSimplePayTest < Test::Unit::TestCase
     options = {
       :email => 'test@email.hu',
       :address => @address,
-      
+      :delivery => [
+        {
+        :name => "SimplePay V2 Tester",
+        :company => "Company name",
+        :country => "hu",
+        :state => "Budapest",
+        :city => "Budapest",
+        :zip => "1111",
+        :address => "Delivery address",
+        :address2 => "",
+        :phone => "06203164978"
+        }
+      ],
+      :threeDSReqAuthMethod => '01',
+      :maySelectEmail => true,
+      :maySelectInvoice => true,
+      :maySelectDelivery => ["HU","AT","DE"]
+    }
+
+    response = @gateway.purchase(@amount, nil, options)
+    assert_success response
+    assert_equal 'OK', response.message
+  end
+
+  def test_successful_purchase_auto
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'OK', response.message
+  end
+
+  def test_successful_purchase_with_more_options_auto
+    options = {
+      :email => 'test@email.hu',
+      :address => @address,
+      :delivery => [
+        {
+        :name => "SimplePay V2 Tester",
+        :company => "Company name",
+        :country => "hu",
+        :state => "Budapest",
+        :city => "Budapest",
+        :zip => "1111",
+        :address => "Delivery address",
+        :address2 => "",
+        :phone => "06203164978"
+        }
+      ],
+      :threeDSReqAuthMethod => '01',
+      :maySelectEmail => true,
+      :maySelectInvoice => true,
+      :maySelectDelivery => ["HU","AT","DE"]
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -62,7 +112,7 @@ class RemoteSimplePayTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+    assert_equal 'FAIL', response.message
   end
 
   def test_successful_authorize_and_capture
