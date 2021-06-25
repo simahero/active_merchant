@@ -5,30 +5,58 @@ class RemoteSimplePayTest < Test::Unit::TestCase
     @gateway = SimplePayGateway.new(fixtures(:simple_pay))
 
     @amount = 100
-    @credit_card = credit_card('4000100011112224')
-    @declined_card = credit_card('4000300011112220')
-    @options = {
-      billing_address: address,
-      description: 'Store Purchase'
+    @credit_card = CreditCard.new(
+      :number     => '4908366099900425',
+      :month      => '10',
+      :year       => '2021',
+      :first_name => 'v2 AUTO',
+      :last_name  => 'Tester',
+      :verification_value  => '579'
+    )
+    @declined_card = CreditCard.new(
+      :number     => '4908366099900424',
+      :month      => '10',
+      :year       => '2021',
+      :first_name => 'v2 AUTO',
+      :last_name  => 'Tester',
+      :verification_value  => '579'
+    )
+
+    @address = {
+      :name =>  'myname',
+      :company => 'company',
+      :country => 'HU',
+      :state => 'Budapest',
+      :city => 'Budapest',
+      :zip => '1111',
+      :address1 => 'Address u.1',
+      :address2 => 'Address u.2',
+      :phone => '06301111111'
     }
+
+    @options = {
+      :email => 'test@email.hu',
+      :address => @address
+    }
+
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'OK', response.message
   end
 
   def test_successful_purchase_with_more_options
     options = {
-      order_id: '1',
-      ip: '127.0.0.1',
-      email: 'joe@example.com'
+      :email => 'test@email.hu',
+      :address => @address,
+      
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'OK', response.message
   end
 
   def test_failed_purchase
@@ -43,7 +71,7 @@ class RemoteSimplePayTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', capture.message
+    assert_equal 'OK', capture.message
   end
 
   def test_failed_authorize
@@ -107,7 +135,7 @@ class RemoteSimplePayTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
+    assert_match %r{OK}, response.message
   end
 
   def test_failed_verify

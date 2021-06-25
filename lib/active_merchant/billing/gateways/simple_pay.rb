@@ -203,29 +203,43 @@ module ActiveMerchant #:nodoc:
         if !options.key?(:urls)
           requires!(options, :redirectURL)
         end
+        if !options.key?(:returnRequest)
+          self.returnRequest = options[:returnRequest]
+        end
         super
       end
 
-      def purchase(options = {})
+      def purchase(amount, credit_card, options = {})
         post = {}
-        generate_post_data(:start, post, options)
-        commit(:start, JSON[post])
+        post[:total] = amount
+        if credit_card == nil
+          generate_post_data(:start, post, options)
+          commit(:start, JSON[post])
+        else
+          add_credit_card_data(post, credit_card)
+          generate_post_data(:auto, post, options)
+          commit(:auto, JSON[post])
+        end 
       end
 
-      def authorize(options = {})
+      #credit card?
+      def authorize(amount, options = {})
         post = {}
+        post[:total] = amount
         generate_post_data(:authorize, post, options)
         commit(:authorize, JSON[post])
       end
 
-      def capture(options = {})
+      def capture(amount, options = {})
         post = {}
+        post[:approveTotal] = amount
         generate_post_data(:capture, post, options)
         commit(:capture, JSON[post])
       end
 
-      def refund(options = {})
+      def refund(amount, options = {})
         post = {}
+        post[:refundTotal] = amount
         generate_post_data(:refund, post, options)
         commit(:refund, JSON[post])
       end
@@ -247,20 +261,15 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def auto(options = {})
-        post = {}
-        generate_post_data(:auto, post, options)
-        commit(:auto, JSON[post])
-      end
-
       def do(options = {})
         post = {}
         generate_post_data(:do, post, options)
         commit(:do, JSON[post])
       end
 
-      def dorecurring(options = {})
+      def dorecurring(amount, options = {})
         post = {}
+        post[:total] = amount
         generate_post_data(:dorecurring, post, options)
         commit(:dorecurring, JSON[post])
       end
@@ -336,21 +345,29 @@ module ActiveMerchant #:nodoc:
 
       end
 
+      def add_credit_card_data(post, credit_card)
+        post[:cardData] = {
+          :number => credit_card.number,
+          :expiry => expdate(credit_card),
+          :cvc => credit_card.verification_value,
+          :holder => credit_card.first_name + ' ' + credit_card.last_name
+        }
+      end
+
       def generate_post_data(action, post, options)
         case action
           when :start
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
-            post[:orderRef] = options[:orderRef] || generate_order_ref()
+            post[:orderRef] = options[:order_id] || generate_order_ref()
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
             post[:language] = self.language
             post[:sdkVersion] = self.sdkVersion
             post[:methods] = ['CARD'] || options[:methods]
-            post[:total] = options[:amount]
             post[:timeout] = generate_timeout
             post[:url] = @options[:redirectURL]
-            post[:twoStep] = options[:twoStep] || false
+            options[:address] = options.delete :address1
             post[:invoice] = options[:address]
             if options.key?(:items)
               post[:items] = options[:items]
@@ -388,16 +405,16 @@ module ActiveMerchant #:nodoc:
           when :authorize
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
-            post[:orderRef] = options[:orderRef] || generate_order_ref()
+            post[:orderRef] = options[:order_id] || generate_order_ref()
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
             post[:language] = self.language
             post[:sdkVersion] = self.sdkVersion
             post[:methods] = ['CARD']
-            post[:total] = options[:amount]
             post[:timeout] = generate_timeout
             post[:url] = @options[:redirectURL]
             post[:twoStep] = true
+            options[:address] = options.delete :address1
             post[:invoice] = options[:address]
             if options.key?(:items)
               post[:items] = options[:items]
@@ -409,17 +426,15 @@ module ActiveMerchant #:nodoc:
           when :capture
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
-            post[:orderRef] = options[:orderRef]
+            post[:orderRef] = options[:order_id]
             post[:originalTotal] = options[:originalTotal]
-            post[:approveTotal] = options[:approveTotal]
             post[:currency] = self.default_currency
             post[:sdkVersion] = self.sdkVersion
 
           when :refund
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
-            post[:orderRef] = options[:orderRef]
-            post[:refundTotal] = options[:refundTotal]
+            post[:orderRef] = options[:order_id]
             post[:currency] = self.default_currency
             post[:sdkVersion] = self.sdkVersion
           
@@ -427,7 +442,7 @@ module ActiveMerchant #:nodoc:
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
             post[:transactionIds] = options[:transactionIds] || []
-            post[:orderRefs] = options[:orderRefs] || []
+            post[:orderRefs] = options[:order_id] || []
             post[:sdkVersion] = self.sdkVersion
             if options.key?(:detailed)
               post[:detailed] = options[:detailed]
@@ -439,24 +454,15 @@ module ActiveMerchant #:nodoc:
           when :auto
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
-            post[:orderRef] = options[:orderRef] || generate_order_ref()
+            post[:orderRef] = options[:order_id] || generate_order_ref()
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
             post[:language] = self.language
             post[:sdkVersion] = self.sdkVersion
             post[:methods] = ['CARD']
-            post[:total] = options[:amount]
             post[:timeout] = generate_timeout
             post[:url] = @options[:redirectURL]
             post[:twoStep] = false
-            if options.key?(:credit_card)
-              post[:cardData] = {
-              :number => options[:credit_card].number,
-              :expiry => expdate(options[:credit_card]),
-              :cvc => options[:credit_card].verification_value,
-              :holder => options[:credit_card].first_name + ' ' + options[:credit_card].last_name
-            }
-            end
             post[:invoice] = options[:address]
             if options.key?(:items)
               post[:items] = options[:items]
@@ -482,7 +488,7 @@ module ActiveMerchant #:nodoc:
           when :do
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
-            post[:orderRef] = options[:orderRef] || generate_order_ref()
+            post[:orderRef] = options[:order_id] || generate_order_ref()
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
             post[:language] = self.language
@@ -529,13 +535,12 @@ module ActiveMerchant #:nodoc:
             post[:salt] = generate_salt()
             post[:token] = options[:token]
             post[:merchant] = @options[:merchantID]
-            post[:orderRef] = options[:orderRef] || generate_order_ref()
+            post[:orderRef] = options[:order_id] || generate_order_ref()
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
             post[:language] = self.language
             post[:sdkVersion] = self.sdkVersion
             post[:methods] = ['CARD']
-            post[:total] = options[:amount]
             post[:timeout] = generate_timeout
             post[:type] = options[:type]
             post[:threeDSReqAuthMethod] = options[:threeDSReqAuthMethod]
@@ -610,6 +615,9 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response, parameters)
         if success_from(response)
+          if test?
+            return 'OK'
+          end
           if self.returnRequest
             return [parameters, response]
           end

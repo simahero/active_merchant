@@ -1171,10 +1171,11 @@ secure_pay_tech:
 securion_pay:
   secret_key: pr_test_qZN4VVIKCySfCeXCBoHO9DBe
 
-# Working credentials, no need to replace
+# Working credentials for public use, restricted functions
 simple_pay:
-  some_credential: SOMECREDENTIAL
-  another_credential: ANOTHERCREDENTIAL
+  merchantID: 'PUBLICTESTHUF'
+  merchantKEY: 'FxDa5w314kLlNseq2sKuVwaqZshZT5d6'
+  redirectURL: 'https://127.0.0.1'
 
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:

@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'json'
 
 class SimplePayTest < Test::Unit::TestCase
 
@@ -33,60 +34,23 @@ class SimplePayTest < Test::Unit::TestCase
       :state => 'Budapest',
       :city => 'Budapest',
       :zip => '1111',
-      :address => 'Address u.1',
+      :address1 => 'Address u.1',
       :address2 => 'Address u.2',
       :phone => '06301111111'
     }
 
     @options = {
-      :amount => @amount,
-      :email => 'email@email.hu',
+      :email => 'test@email.hu',
       :address => @address
-    }
-
-    @options_for_auto = {
-      :amount => @amount,
-      :email => 'email@email.hu',
-      :address => @address,
-      :credit_card => @credit_card
-    }
-
-    @options_for_auth = {
-      :orderRef => 'authorizationorderreffortesting',
-      :amount => @amount,
-      :email => 'email@email.hu',
-      :address => @address
-    }
-
-    @options_with_secret = {
-      :amount => @amount,
-      :email => 'email@email.hu',
-      :address => @address,
-      :cardSecret => 'thesuperdupersecret'
-    }
-
-    @options_with_recurring = {
-      :amount => @amount,
-      :email => 'email@email.hu',
-      :address => @address,
-      :recurring => {
-        :times => 3,
-        :until => "2030-12-01T18:00:00+02:00",
-        :maxAmount => 2000
-      }
-    }
-
-    @fail_options = {
-      :email => 'email@email.hu'
     }
 
   end
 
   def test_successful_purchase
     #NOT SURE
-    #@gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    response = @gateway.purchase(@options)
+    response = @gateway.purchase(@amount, nil, @options)
     
     assert_success response
     assert response.message.key?('paymentUrl')
@@ -96,29 +60,57 @@ class SimplePayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_secret
-    response = @gateway.purchase(@options_with_secret)
+
+    options_with_secret = @options.clone
+    options_with_secret[:cardSecret] = 'thesuperdupersecret'
+
+    response = @gateway.purchase(@amount, nil, options_with_secret)
     assert_success response
 
     assert response.message.key?('paymentUrl')
+    assert_equal response.message['merchant'], @merchant 
+    assert !response.message.key?('errorCodes')
     assert response.test?
   end
 
   def test_successful_recurring_purchase
-    response = @gateway.purchase(@options_with_recurring)
+    options_with_recurring = @options.clone
+    options_with_recurring[:recurring] = {
+      :times => 3,
+      :until => "2030-12-01T18:00:00+02:00",
+      :maxAmount => 2000
+    }
+    response = @gateway.purchase(@amount, nil, options_with_recurring)
 
-    assert_success response
+    assert response.message.key?('paymentUrl')
+    assert_equal response.message['merchant'], @merchant 
+    assert !response.message.key?('errorCodes')
     assert response.message.key?('tokens')
+    assert response.message['tokens'].instance_of? Array
+    assert_equal response.message['tokens'].length, 3
+    assert response.test?
+  end
+
+  def test_succesfull_purchase_with_credit_card
+    options_for_auto = @options.clone
+
+    response = @gateway.purchase(@amount, @credit_card, options_for_auto)
+    assert !response.message.key?('paymentUrl')
+    assert_equal response.message['merchant'], @merchant 
+    assert !response.message.key?('errorCodes')
     assert response.test?
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@fail_options)
+    response = @gateway.purchase(nil, nil, @options)
     assert_failure response
   end
 
   #TODO OTP ERROR, No two step testing allowed
   # def test_successful_authorize
-  #   response = @gateway.authorize(@options_for_auth)
+  #   options_for_auth = @options.clone
+  #   options_for_auth[:order_id] = 'authorizationorderreffortesting'
+  #   response = @gateway.authorize(@amount, options_for_auth)
   #   assert_success response
 
   #   assert response.message.key?('paymentUrl')
@@ -127,72 +119,62 @@ class SimplePayTest < Test::Unit::TestCase
 
   #TODO OTP ERROR, No two step testing allowed
   # def test_failed_authorize
-  #   response = @gateway.authorize(@fail_options)
+  #   response = @gateway.authorize(nil, @options)
   #   assert_failure response
   # end
 
   #TODO OTP ERROR, No two step testing allowed
   # def test_successful_capture
-  #   response = @gateway.capture({
-  #     :orderRef => 'authorizationorderreffortesting',
-  #     :originalTotal => @amount,
-  #     :approveTotal => @amount / 2
-  #   })
+  #   options_for_capture = {
+  #     :order_id => 'authorizationorderreffortesting',
+  #     :originalTotal => @amount
+  #   }
+  #   response = @gateway.capture(1, options_for_capture)
   #   assert_success response
   # end
 
   #TODO OTP ERROR, No two step testing allowed
   # def test_failed_capture
-  #   response = @gateway.capture({
-  #     :originalTotal => @amount,
-  #     :approveTotal => @amount
-  #   })
+  #   options_for_failed_capture = {
+  #     #:order_id => 'thisorderidshouldnotexist',
+  #     :originalTotal => @amount * 2
+  #   }
+  #   response = @gateway.capture(1, options_for_failed_capture)
   #   assert_failure response
   # end
 
-  #TODO OTP ERROR, No two step testing allowed
-  # def test_successful_refund
-  #   response = @gateway.refund({
-  #     :orderRef => 'AMSP202106242139058912',
-  #     :refundTotal  => @amount / 2
-  #   })
-  #   assert_success response
-  # end
-
-  #TODO OTP ERROR, No two step testing allowed
-  # def test_failed_refund
-  #   response = @gateway.refund({
-  #     :refundTotal  => @amount
-  #   })
-  #   assert_failure response
-  # end
-  
-  def test_succesfull_auto
-    response = @gateway.auto(@options_for_auto)
+  #TODO On FAIL: New :order_id should be created witha  sucessfull purchase
+  def test_successful_refund
+    options_for_refund = {
+      :order_id => 'AMSP202106252309552133',
+    }
+    response = @gateway.refund(1, options_for_refund)
     assert_success response
   end
 
-  def test_unsuccesfull_auto
-    response = @gateway.auto(@fail_options)
+  #TODO OTP ERROR, No two step testing allowed
+  def test_failed_refund
+    options_for_failed_refund = {
+      #missing order_id
+    }
+    response = @gateway.refund(@amount, options_for_failed_refund)
     assert_failure response
   end
 
-  #NO WAY OF TESTING IT
+  #NO WAY OF TESTING IT WITHOUT SIMULATING A BROWSER
   # def test_succesfull_dorecurring
-  #   token = @gateway.purchase({
-  #     :amount => @amount,
-  #     :email => 'email@email.hu',
-  #     :address => @address,
-  #     :recurring => {
-  #       :times => 1,
-  #       :until => "2030-12-01T18:00:00+02:00",
-  #       :maxAmount => 2000
-  #     }
-  #   }).message['tokens'][0]
+  #   options_with_token = @options.clone
+  #   options_with_token[:recurring] = {
+  #     :times => 1,
+  #     :until => "2030-12-01T18:00:00+02:00",
+  #     :maxAmount => 2000
+  #   }
+  #   token = @gateway.purchase(@amount, options_with_token).message['tokens'][0]
 
-  #   response = @gateway.dorecurring({
-  #     :amount => @amount,
-  #     :email => 'email@email.hu',
+  #   options_for_dorecurring = @options.clone
+  #   options_for_dorecurring
+  #   response = @gateway.dorecurring(@amount, {
+  #     :email => 'test@email.hu',
   #     :address => @address,
   #     :token => token,
   #     :threeDSReqAuthMethod => '02',
@@ -226,14 +208,7 @@ class SimplePayTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    %(
-      Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      to "true" when running remote tests:
-
-      $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-        test/remote/gateways/remote_simple_pay_test.rb \
-        -n test_successful_purchase
-    )
+    '{"salt":"284Vgd2liJxElgLDFnwQ95QKp47eSi8d","merchant":"PUBLICTESTHUF","orderRef":"AMSP202106252322463392","currency":"HUF","transactionId":501284689,"timeout":"2021-06-25T23:23:46+02:00","total":100.0,"paymentUrl":"https://sandbox.simplepay.hu/pay/pay/pspHU/UYGSVcVcZK5k2aowEs2OTIFjy5cA0QOAwSILreOrkS-hLU5zD4"}'
   end
 
   def failed_purchase_response; end
