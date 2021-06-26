@@ -71,6 +71,11 @@ class RemoteSimplePayTest < Test::Unit::TestCase
   def test_successful_purchase_with_secret
   end
 
+  def test_successful_purchase_for_card_reg
+  end
+
+  
+
   #CANNOT BE TESTED, USER INTERACTION NEEDED
   # def test_successful_purchase_with_token
   #   recurring_options = @options.clone
