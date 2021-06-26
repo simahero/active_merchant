@@ -5,11 +5,11 @@ class SimplePayTest < Test::Unit::TestCase
 
   def setup
     @gateway = SimplePayGateway.new({
-      :merchantID  => 'PUBLICTESTHUF',
-      :merchantKEY => 'FxDa5w314kLlNseq2sKuVwaqZshZT5d6',
-      :redirectURL => 'https://127.0.0.1',
+      :merchant_id  => 'PUBLICTESTHUF',
+      :merchant_key => 'FxDa5w314kLlNseq2sKuVwaqZshZT5d6',
+      :redirect_url => 'https://127.0.0.1',
       :timeout     => 1,
-      :returnRequest => true
+      :return_request => true
     })
 
     @merchant = 'PUBLICTESTHUF'
@@ -48,14 +48,14 @@ class SimplePayTest < Test::Unit::TestCase
 
   def test_successful_purchase
     #NOT SURE
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    #@gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, nil, @options)
     
     assert_success response
-    assert response.message.key?('paymentUrl')
-    assert_equal response.message['merchant'], @merchant 
-    assert !response.message.key?('errorCodes')
+    assert response.params.key?('paymentUrl')
+    assert_equal response.params['merchant'], @merchant 
+    assert !response.params.key?('errorCodes')
     assert response.test?
   end
 
@@ -67,9 +67,9 @@ class SimplePayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, nil, options_with_secret)
     assert_success response
 
-    assert response.message.key?('paymentUrl')
-    assert_equal response.message['merchant'], @merchant 
-    assert !response.message.key?('errorCodes')
+    assert response.params.key?('paymentUrl')
+    assert_equal response.params['merchant'], @merchant 
+    assert !response.params.key?('errorCodes')
     assert response.test?
   end
 
@@ -78,26 +78,26 @@ class SimplePayTest < Test::Unit::TestCase
     options_with_recurring[:recurring] = {
       :times => 3,
       :until => "2030-12-01T18:00:00+02:00",
-      :maxAmount => 2000
+      :max_amount => 2000
     }
     response = @gateway.purchase(@amount, nil, options_with_recurring)
 
-    assert response.message.key?('paymentUrl')
-    assert_equal response.message['merchant'], @merchant 
-    assert !response.message.key?('errorCodes')
-    assert response.message.key?('tokens')
-    assert response.message['tokens'].instance_of? Array
-    assert_equal response.message['tokens'].length, 3
+    assert response.params.key?('paymentUrl')
+    assert_equal response.params['merchant'], @merchant 
+    assert !response.params.key?('errorCodes')
+    assert response.params.key?('tokens')
+    assert response.params['tokens'].instance_of? Array
+    assert_equal response.params['tokens'].length, 3
     assert response.test?
   end
 
   def test_succesfull_purchase_with_credit_card
     options_for_auto = @options.clone
-
+    
     response = @gateway.purchase(@amount, @credit_card, options_for_auto)
-    assert !response.message.key?('paymentUrl')
-    assert_equal response.message['merchant'], @merchant 
-    assert !response.message.key?('errorCodes')
+    
+    assert_equal response.params['merchant'], @merchant 
+    assert !response.params.key?('errorCodes')
     assert response.test?
   end
 
@@ -113,7 +113,7 @@ class SimplePayTest < Test::Unit::TestCase
   #   response = @gateway.authorize(@amount, options_for_auth)
   #   assert_success response
 
-  #   assert response.message.key?('paymentUrl')
+  #   assert response.params.key?('paymentUrl')
   #   assert response.test?
   # end
 
@@ -127,7 +127,7 @@ class SimplePayTest < Test::Unit::TestCase
   # def test_successful_capture
   #   options_for_capture = {
   #     :order_id => 'authorizationorderreffortesting',
-  #     :originalTotal => @amount
+  #     :original_total => @amount
   #   }
   #   response = @gateway.capture(1, options_for_capture)
   #   assert_success response
@@ -137,7 +137,7 @@ class SimplePayTest < Test::Unit::TestCase
   # def test_failed_capture
   #   options_for_failed_capture = {
   #     #:order_id => 'thisorderidshouldnotexist',
-  #     :originalTotal => @amount * 2
+  #     :original_total => @amount * 2
   #   }
   #   response = @gateway.capture(1, options_for_failed_capture)
   #   assert_failure response
@@ -177,7 +177,7 @@ class SimplePayTest < Test::Unit::TestCase
   #     :email => 'test@email.hu',
   #     :address => @address,
   #     :token => token,
-  #     :threeDSReqAuthMethod => '02',
+  #     :three_ds_req_auth_method => '02',
   #     :type => 'MIT'
   #   })
   #   assert_success response

@@ -51,23 +51,10 @@ class RemoteSimplePayTest < Test::Unit::TestCase
     options = {
       :email => 'test@email.hu',
       :address => @address,
-      :delivery => [
-        {
-        :name => "SimplePay V2 Tester",
-        :company => "Company name",
-        :country => "hu",
-        :state => "Budapest",
-        :city => "Budapest",
-        :zip => "1111",
-        :address => "Delivery address",
-        :address2 => "",
-        :phone => "06203164978"
-        }
-      ],
-      :threeDSReqAuthMethod => '01',
-      :maySelectEmail => true,
-      :maySelectInvoice => true,
-      :maySelectDelivery => ["HU","AT","DE"]
+      :three_ds_req_auth_method => '01',
+      :may_select_email => true,
+      :may_select_invoice => true,
+      :may_select_delivery => ["HU","AT","DE"]
     }
 
     response = @gateway.purchase(@amount, nil, options)
@@ -81,144 +68,117 @@ class RemoteSimplePayTest < Test::Unit::TestCase
     assert_equal 'OK', response.message
   end
 
-  def test_successful_purchase_with_more_options_auto
-    options = {
-      :email => 'test@email.hu',
-      :address => @address,
-      :delivery => [
-        {
-        :name => "SimplePay V2 Tester",
-        :company => "Company name",
-        :country => "hu",
-        :state => "Budapest",
-        :city => "Budapest",
-        :zip => "1111",
-        :address => "Delivery address",
-        :address2 => "",
-        :phone => "06203164978"
-        }
-      ],
-      :threeDSReqAuthMethod => '01',
-      :maySelectEmail => true,
-      :maySelectInvoice => true,
-      :maySelectDelivery => ["HU","AT","DE"]
-    }
-
-    response = @gateway.purchase(@amount, @credit_card, options)
-    assert_success response
-    assert_equal 'OK', response.message
-  end
-
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'FAIL', response.message
   end
 
-  def test_successful_authorize_and_capture
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
+  # ACCOUNT NEEDED
+  # def test_successful_authorize_and_capture
+  #   auth = @gateway.authorize(@amount, @credit_card, @options)
+  #   assert_success auth
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_success capture
-    assert_equal 'OK', capture.message
-  end
+  #   assert capture = @gateway.capture(@amount, auth.authorization)
+  #   assert_success capture
+  #   assert_equal 'OK', capture.message
+  # end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED AUTHORIZE MESSAGE', response.message
+    assert_equal 'FAIL', response.message
   end
 
-  def test_partial_capture
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
+  # def test_partial_capture
+  #   auth = @gateway.authorize(@amount, @credit_card, @options)
+  #   assert_success auth
 
-    assert capture = @gateway.capture(@amount - 1, auth.authorization)
-    assert_success capture
-  end
+  #   assert capture = @gateway.capture(@amount - 1, auth.authorization)
+  #   assert_success capture
+  # end
 
-  def test_failed_capture
-    response = @gateway.capture(@amount, '')
-    assert_failure response
-    assert_equal 'REPLACE WITH FAILED CAPTURE MESSAGE', response.message
-  end
+  # def test_failed_capture
+  #   response = @gateway.capture(@amount, '')
+  #   assert_failure response
+  #   assert_equal 'FAIL', response.message
+  # end
 
-  def test_successful_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
+  # def test_successful_refund
+  #   purchase = @gateway.purchase(@amount, @credit_card, @options)
+  #   assert_success purchase
 
-    assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_success refund
-    assert_equal 'REPLACE WITH SUCCESSFUL REFUND MESSAGE', refund.message
-  end
+  #   assert refund = @gateway.refund(@amount, purchase.authorization)
+  #   assert_success refund
+  #   assert_equal 'OK', refund.message
+  # end
 
-  def test_partial_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
+  # def test_partial_refund
+  #   purchase = @gateway.purchase(@amount, @credit_card, @options)
+  #   assert_success purchase
 
-    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
-    assert_success refund
-  end
+  #   assert refund = @gateway.refund(@amount - 1, purchase.authorization)
+  #   assert_success refund
+  # end
 
-  def test_failed_refund
-    response = @gateway.refund(@amount, '')
-    assert_failure response
-    assert_equal 'REPLACE WITH FAILED REFUND MESSAGE', response.message
-  end
+  # def test_failed_refund
+  #   response = @gateway.refund(@amount, '')
+  #   assert_failure response
+  #   assert_equal 'FAIL', response.message
+  # end
 
-  def test_successful_void
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
+  # def test_successful_void
+  #   auth = @gateway.authorize(@amount, @credit_card, @options)
+  #   assert_success auth
 
-    assert void = @gateway.void(auth.authorization)
-    assert_success void
-    assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', void.message
-  end
+  #   assert void = @gateway.void(auth.authorization)
+  #   assert_success void
+  #   assert_equal 'OK', void.message
+  # end
 
-  def test_failed_void
-    response = @gateway.void('')
-    assert_failure response
-    assert_equal 'REPLACE WITH FAILED VOID MESSAGE', response.message
-  end
+  # def test_failed_void
+  #   response = @gateway.void('')
+  #   assert_failure response
+  #   assert_equal 'FAIL', response.message
+  # end
 
-  def test_successful_verify
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-    assert_match %r{OK}, response.message
-  end
+  # def test_successful_verify
+  #   response = @gateway.verify(@credit_card, @options)
+  #   assert_success response
+  #   assert_match %r{OK}, response.message
+  # end
 
-  def test_failed_verify
-    response = @gateway.verify(@declined_card, @options)
-    assert_failure response
-    assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
-  end
+  # def test_failed_verify
+  #   response = @gateway.verify(@declined_card, @options)
+  #   assert_failure response
+  #   assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
+  # end
 
-  def test_invalid_login
-    gateway = SimplePayGateway.new(login: '', password: '')
+  # def test_invalid_login
+  #   gateway = SimplePayGateway.new(login: '', password: '')
 
-    response = gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match %r{REPLACE WITH FAILED LOGIN MESSAGE}, response.message
-  end
+  #   response = gateway.purchase(@amount, @credit_card, @options)
+  #   assert_failure response
+  #   assert_match %r{REPLACE WITH FAILED LOGIN MESSAGE}, response.message
+  # end
 
-  def test_dump_transcript
-    # This test will run a purchase transaction on your gateway
-    # and dump a transcript of the HTTP conversation so that
-    # you can use that transcript as a reference while
-    # implementing your scrubbing logic.  You can delete
-    # this helper after completing your scrub implementation.
-    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
-  end
+  # def test_dump_transcript
+  #   # This test will run a purchase transaction on your gateway
+  #   # and dump a transcript of the HTTP conversation so that
+  #   # you can use that transcript as a reference while
+  #   # implementing your scrubbing logic.  You can delete
+  #   # this helper after completing your scrub implementation.
+  #   dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
+  # end
 
-  def test_transcript_scrubbing
-    transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card, @options)
-    end
-    transcript = @gateway.scrub(transcript)
+  # def test_transcript_scrubbing
+  #   transcript = capture_transcript(@gateway) do
+  #     @gateway.purchase(@amount, @credit_card, @options)
+  #   end
+  #   transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:password], transcript)
-  end
+  #   assert_scrubbed(@credit_card.number, transcript)
+  #   assert_scrubbed(@credit_card.verification_value, transcript)
+  #   assert_scrubbed(@gateway.options[:password], transcript)
+  # end
 end

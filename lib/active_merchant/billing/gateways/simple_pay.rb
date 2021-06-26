@@ -191,16 +191,16 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :merchantID, :merchantKEY, :redirectURL)
+        requires!(options, :merchant_id, :merchant_key, :redirect_url)
         if ['HUF', 'EUR', 'USD'].include? options[:currency]
           self.default_currency = options[:currency]
         end
-        if !options.key?(:redirectURL)
+        if !options.key?(:redirect_url)
           requires!(options, :urls)
           requires!(options[:urls], :success, :fail, :cancel, :timeout)
         end
         if !options.key?(:urls)
-          requires!(options, :redirectURL)
+          requires!(options, :redirect_url)
         end
         super
       end
@@ -311,7 +311,7 @@ module ActiveMerchant #:nodoc:
           json = JSON[json]
         end
 
-        if get_signature(:merchantKEY, json) == signature
+        if get_signature(:merchant_key, json) == signature
           json[:receiveDate] = generate_timeout(0)
           commit(:IPN, json)
           return true
@@ -357,7 +357,7 @@ module ActiveMerchant #:nodoc:
         case action
           when :start
             post[:salt] = generate_salt()
-            post[:merchant] = @options[:merchantID]
+            post[:merchant] = @options[:merchant_id]
             post[:orderRef] = options[:order_id] || generate_order_ref()
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
@@ -365,7 +365,7 @@ module ActiveMerchant #:nodoc:
             post[:sdkVersion] = self.sdkVersion
             post[:methods] = ['CARD'] || options[:methods]
             post[:timeout] = generate_timeout
-            post[:url] = @options[:redirectURL]
+            post[:url] = @options[:redirect_url]
             options[:address] = options.delete :address1
             post[:invoice] = options[:address]
             if options.key?(:items)
@@ -375,35 +375,35 @@ module ActiveMerchant #:nodoc:
               post[:delivery] = options[:delivery]
             end
             if options.key?(:threeDSReqAuthMethod)
-              post[:threeDSReqAuthMethod] = options[:threeDSReqAuthMethod]
+              post[:threeDSReqAuthMethod] = options[:three_ds_req_auth_method]
             end
             if options.key?(:recurring)
               post[:recurring] = {
                 :times => options[:recurring][:times],
                 :until => options[:recurring][:until],
-                :maxAmount => options[:recurring][:maxAmount]
+                :maxAmount => options[:recurring][:max_amount]
               }
             end
             if options.key?(:onlyCardReg)
-              post[:onlyCardReg] = options[:onlyCardReg]
+              post[:onlyCardReg] = options[:only_card_reg]
               post[:twoStep] = true
             end
             if options.key?(:maySelectEmail)
-              post[:maySelectEmail] = options[:maySelectEmail]
+              post[:maySelectEmail] = options[:may_select_email]
             end
             if options.key?(:maySelectInvoice)
-              post[:maySelectInvoice] = options[:maySelectInvoice]
+              post[:maySelectInvoice] = options[:may_select_invoice]
             end
             if options.key?(:maySelectDelivery)
-              post[:maySelectDelivery] = options[:maySelectDelivery]
+              post[:maySelectDelivery] = options[:may_select_delivery]
             end
             if options.key?(:cardSecret)
-              post[:cardSecret] = options[:cardSecret]
+              post[:cardSecret] = options[:card_secret]
             end
 
           when :authorize
             post[:salt] = generate_salt()
-            post[:merchant] = @options[:merchantID]
+            post[:merchant] = @options[:merchant_id]
             post[:orderRef] = options[:order_id] || generate_order_ref()
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
@@ -411,36 +411,36 @@ module ActiveMerchant #:nodoc:
             post[:sdkVersion] = self.sdkVersion
             post[:methods] = ['CARD']
             post[:timeout] = generate_timeout
-            post[:url] = @options[:redirectURL]
+            post[:url] = @options[:redirect_url]
             post[:twoStep] = true
             options[:address] = options.delete :address1
             post[:invoice] = options[:address]
             if options.key?(:items)
               post[:items] = options[:items]
             end
-            if options.key?(:threeDSReqAuthMethod)
-              post[:threeDSReqAuthMethod] = options[:threeDSReqAuthMethod]
+            if options.key?(:three_ds_req_auth_method)
+              post[:threeDSReqAuthMethod] = options[:three_ds_req_auth_method]
             end
 
           when :capture
             post[:salt] = generate_salt()
-            post[:merchant] = @options[:merchantID]
+            post[:merchant] = @options[:merchant_id]
             post[:orderRef] = options[:order_id]
-            post[:originalTotal] = options[:originalTotal]
+            post[:originalTotal] = options[:original_total]
             post[:currency] = self.default_currency
             post[:sdkVersion] = self.sdkVersion
 
           when :refund
             post[:salt] = generate_salt()
-            post[:merchant] = @options[:merchantID]
+            post[:merchant] = @options[:merchant_id]
             post[:orderRef] = options[:order_id]
             post[:currency] = self.default_currency
             post[:sdkVersion] = self.sdkVersion
           
           when :query
             post[:salt] = generate_salt()
-            post[:merchant] = @options[:merchantID]
-            post[:transactionIds] = options[:transactionIds] || []
+            post[:merchant] = @options[:merchant_id]
+            post[:transactionIds] = options[:transaction_ids] || []
             post[:orderRefs] = options[:order_id] || []
             post[:sdkVersion] = self.sdkVersion
             if options.key?(:detailed)
@@ -452,7 +452,7 @@ module ActiveMerchant #:nodoc:
 
           when :auto
             post[:salt] = generate_salt()
-            post[:merchant] = @options[:merchantID]
+            post[:merchant] = @options[:merchant_id]
             post[:orderRef] = options[:order_id] || generate_order_ref()
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
@@ -460,33 +460,36 @@ module ActiveMerchant #:nodoc:
             post[:sdkVersion] = self.sdkVersion
             post[:methods] = ['CARD']
             post[:timeout] = generate_timeout
-            post[:url] = @options[:redirectURL]
+            post[:url] = @options[:redirect_url]
             post[:twoStep] = false
             post[:invoice] = options[:address]
             if options.key?(:items)
               post[:items] = options[:items]
             end
-            if options.key?(:threeDS)
-              post[:threeDSReqAuthMethod] = options[:threeDS][:threeDSReqAuthMethod]
-              post[:threeDSReqAuthType]   = options[:threeDS][:threeDSReqAuthType]
-              if options[:threeDS].key?(:browser)
+            if options.key?(:three_ds)
+              post[:threeDSReqAuthMethod] = options[:three_ds][:three_ds_req_auth_method]
+              post[:threeDSReqAuthType]   = options[:three_ds][:three_ds_req_auth_type]
+              if options[:three_ds].key?(:browser)
                 post[:browser] = {
-                  :accept  => options[:threeDS][:browser][:accept],
-                  :agent  => options[:threeDS][:browser][:agent],
-                  :ip => options[:threeDS][:browser][:ip],
-                  :java  => options[:threeDS][:browser][:java],
-                  :lang => options[:threeDS][:browser][:lang],
-                  :color => options[:threeDS][:browser][:color],
-                  :height => options[:threeDS][:browser][:height],
-                  :width => options[:threeDS][:browser][:width],
-                  :tz => options[:threeDS][:browser][:tz]
+                  :accept  => options[:three_ds][:browser][:accept],
+                  :agent  => options[:three_ds][:browser][:agent],
+                  :ip => options[:three_ds][:browser][:ip],
+                  :java  => options[:three_ds][:browser][:java],
+                  :lang => options[:three_ds][:browser][:lang],
+                  :color => options[:three_ds][:browser][:color],
+                  :height => options[:three_ds][:browser][:height],
+                  :width => options[:three_ds][:browser][:width],
+                  :tz => options[:three_ds][:browser][:tz]
                 }
               end
+            end
+            if options.key?(:three_ds_external)
+              post[:threeDSExternal] = options[:three_ds_external]
             end
 
           when :do
             post[:salt] = generate_salt()
-            post[:merchant] = @options[:merchantID]
+            post[:merchant] = @options[:merchant_id]
             post[:orderRef] = options[:order_id] || generate_order_ref()
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
@@ -494,8 +497,8 @@ module ActiveMerchant #:nodoc:
             post[:sdkVersion] = self.sdkVersion
             post[:methods] = ['CARD']
             post[:total] = options[:amount]
-            post[:cardId] = options[:cardId]
-            post[:cardSecret] = options[:cardSecret]
+            post[:cardId] = options[:card_id]
+            post[:cardSecret] = options[:card_secret]
             post[:invoice] = options[:address]
             if options.key?(:items)
               post[:items] = options[:items]
@@ -503,37 +506,37 @@ module ActiveMerchant #:nodoc:
             if options.key?(:delivery)
               post[:delivery] = options[:delivery]
             end
-            if options.key?(:threeDS)
-              post[:threeDSReqAuthMethod] = options[:threeDS][:threeDSReqAuthMethod]
+            if options.key?(:three_ds)
+              post[:threeDSReqAuthMethod] = options[:three_ds][:three_ds_req_auth_method]
               post[:type] = 'CIT'
-              if options[:threeDS].key?(:browser)
+              if options[:three_ds].key?(:browser)
                 post[:browser] = {
-                  :accept  => options[:threeDS][:browser][:accept],
-                  :agent  => options[:threeDS][:browser][:agent],
-                  :ip => options[:threeDS][:browser][:ip],
-                  :java  => options[:threeDS][:browser][:java],
-                  :lang => options[:threeDS][:browser][:lang],
-                  :color => options[:threeDS][:browser][:color],
-                  :height => options[:threeDS][:browser][:height],
-                  :width => options[:threeDS][:browser][:width],
-                  :tz => options[:threeDS][:browser][:tz]
+                  :accept  => options[:three_ds][:browser][:accept],
+                  :agent  => options[:three_ds][:browser][:agent],
+                  :ip => options[:three_ds][:browser][:ip],
+                  :java  => options[:three_ds][:browser][:java],
+                  :lang => options[:three_ds][:browser][:lang],
+                  :color => options[:three_ds][:browser][:color],
+                  :height => options[:three_ds][:browser][:height],
+                  :width => options[:three_ds][:browser][:width],
+                  :tz => options[:three_ds][:browser][:tz]
                 }
               end
             end
             if options.key?(:maySelectEmail)
-              post[:maySelectEmail] = options[:maySelectEmail]
+              post[:maySelectEmail] = options[:may_select_email]
             end
             if options.key?(:maySelectInvoice)
-              post[:maySelectInvoice] = options[:maySelectInvoice]
+              post[:maySelectInvoice] = options[:may_select_invoice]
             end
             if options.key?(:maySelectDelivery)
-              post[:maySelectDelivery] = options[:maySelectDelivery]
+              post[:maySelectDelivery] = options[:may_select_delivery]
             end
 
           when :dorecurring
             post[:salt] = generate_salt()
             post[:token] = options[:token]
-            post[:merchant] = @options[:merchantID]
+            post[:merchant] = @options[:merchant_id]
             post[:orderRef] = options[:order_id] || generate_order_ref()
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
@@ -542,7 +545,7 @@ module ActiveMerchant #:nodoc:
             post[:methods] = ['CARD']
             post[:timeout] = generate_timeout
             post[:type] = options[:type]
-            post[:threeDSReqAuthMethod] = options[:threeDSReqAuthMethod]
+            post[:threeDSReqAuthMethod] = options[:three_ds_req_auth_method]
             post[:invoice] = options[:address]
             if options.key?(:items)
               post[:items] = options[:items]
@@ -550,26 +553,26 @@ module ActiveMerchant #:nodoc:
 
           when :tokenquery
             post[:token]      = options[:token],
-            post[:merchant]   = @options[:merchantID],
+            post[:merchant]   = @options[:merchant_id],
             post[:salt]       = generate_salt,
             post[:sdkVersion] = self.sdkVersion
 
           when :tokencancel
             post[:token]      = options[:token]
-            post[:merchant]   = @options[:merchantID]
+            post[:merchant]   = @options[:merchant_id]
             post[:salt]       = generate_salt,
             post[:sdkVersion] = self.sdkVersion
         
           when :cardquery
-            post[:cardId]      = options[:cardId]
-            post[:history]      = options[:history] || false
-            post[:merchant]   = @options[:merchantID]
+            post[:cardId]     = options[:card_id]
+            post[:history]    = options[:history] || false
+            post[:merchant]   = @options[:merchant_id]
             post[:salt]       = generate_salt
             post[:sdkVersion] = self.sdkVersion
 
           when :cardcancel
-            post[:cardId]      = options[:cardId]
-            post[:merchant]   = @options[:merchantID]
+            post[:cardId]      = options[:card_id]
+            post[:merchant]   = @options[:merchant_id]
             post[:salt]       = generate_salt
             post[:sdkVersion] = self.sdkVersion
         end
@@ -589,7 +592,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         url = (test? ? test_url[action] : live_url[action])
-        headers = parse_headers(@options[:merchantKEY], parameters)
+        headers = parse_headers(@options[:merchant_key], parameters)
         response = JSON[ssl_post(url, parameters, headers)]
 
         puts action
@@ -600,9 +603,9 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response, parameters),
           response,
-          #authorization: authorization_from(response),
-          #avs_result: AVSResult.new(code: response['some_avs_response_key']),
-          #cvv_result: CVVResult.new(response['some_cvv_response_key']),
+          authorization: nil, #authorization_from(response),
+          avs_result: nil, #AVSResult.new(code: response['some_avs_response_key']),
+          cvv_result: nil, #CVVResult.new(response['some_cvv_response_key']),
           test: test?,
           error_code: error_code_from(response)
         )
@@ -617,7 +620,7 @@ module ActiveMerchant #:nodoc:
           if test?
             return 'OK'
           end
-          if @options[:returnRequest]
+          if @options[:return_request]
             return [parameters, response]
           end
           return response
@@ -630,7 +633,7 @@ module ActiveMerchant #:nodoc:
             response["errorCodes"].each do |error|
               errors << STANDARD_ERROR_CODE_MAPPING[error.to_s]
             end
-            if @options[:returnRequest]
+            if @options[:return_request]
               return [parameters, errors]
             end
             return errors
