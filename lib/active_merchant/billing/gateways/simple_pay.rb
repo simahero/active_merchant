@@ -46,8 +46,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://simplepay.hu/'
       self.display_name = 'Simple Pay'
 
-      class_attribute :sdkVersion, :language, :allowed_ip
-      self.sdkVersion = 'SimplePayV2.1_Payment_PHP_SDK_2.0.7_190701:dd236896400d7463677a82a47f53e36e'
+      class_attribute :sdk_version, :language, :allowed_ip
+      self.sdk_version = 'SimplePayV2.1_Payment_PHP_SDK_2.0.7_190701:dd236896400d7463677a82a47f53e36e'
       self.language = 'HU'
       self.allowed_ip = '94.199.53.96'
 
@@ -362,7 +362,7 @@ module ActiveMerchant #:nodoc:
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
             post[:language] = self.language
-            post[:sdkVersion] = self.sdkVersion
+            post[:sdkVersion] = self.sdk_version
             post[:methods] = ['CARD'] || options[:methods]
             post[:timeout] = generate_timeout
             post[:url] = @options[:redirect_url]
@@ -374,7 +374,7 @@ module ActiveMerchant #:nodoc:
             if options.key?(:delivery)
               post[:delivery] = options[:delivery]
             end
-            if options.key?(:threeDSReqAuthMethod)
+            if options.key?(:three_ds_req_auth_method)
               post[:threeDSReqAuthMethod] = options[:three_ds_req_auth_method]
             end
             if options.key?(:recurring)
@@ -384,20 +384,20 @@ module ActiveMerchant #:nodoc:
                 :maxAmount => options[:recurring][:max_amount]
               }
             end
-            if options.key?(:onlyCardReg)
+            if options.key?(:only_card_reg)
               post[:onlyCardReg] = options[:only_card_reg]
               post[:twoStep] = true
             end
-            if options.key?(:maySelectEmail)
+            if options.key?(:may_select_email)
               post[:maySelectEmail] = options[:may_select_email]
             end
-            if options.key?(:maySelectInvoice)
+            if options.key?(:may_select_invoice)
               post[:maySelectInvoice] = options[:may_select_invoice]
             end
-            if options.key?(:maySelectDelivery)
+            if options.key?(:may_select_delivery)
               post[:maySelectDelivery] = options[:may_select_delivery]
             end
-            if options.key?(:cardSecret)
+            if options.key?(:card_secret)
               post[:cardSecret] = options[:card_secret]
             end
 
@@ -408,7 +408,7 @@ module ActiveMerchant #:nodoc:
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
             post[:language] = self.language
-            post[:sdkVersion] = self.sdkVersion
+            post[:sdkVersion] = self.sdk_version
             post[:methods] = ['CARD']
             post[:timeout] = generate_timeout
             post[:url] = @options[:redirect_url]
@@ -418,8 +418,31 @@ module ActiveMerchant #:nodoc:
             if options.key?(:items)
               post[:items] = options[:items]
             end
+            if options.key?(:delivery)
+              post[:delivery] = options[:delivery]
+            end
             if options.key?(:three_ds_req_auth_method)
               post[:threeDSReqAuthMethod] = options[:three_ds_req_auth_method]
+            end
+            if options.key?(:recurring)
+              post[:recurring] = {
+                :times => options[:recurring][:times],
+                :until => options[:recurring][:until],
+                :maxAmount => options[:recurring][:max_amount]
+              }
+            end
+            if options.key?(:only_card_reg)
+              post[:onlyCardReg] = options[:only_card_reg]
+              post[:twoStep] = true
+            end
+            if options.key?(:may_select_email)
+              post[:maySelectEmail] = options[:may_select_email]
+            end
+            if options.key?(:may_select_invoice)
+              post[:maySelectInvoice] = options[:may_select_invoice]
+            end
+            if options.key?(:may_select_delivery)
+              post[:maySelectDelivery] = options[:may_select_delivery]
             end
 
           when :capture
@@ -428,21 +451,21 @@ module ActiveMerchant #:nodoc:
             post[:orderRef] = options[:order_id]
             post[:originalTotal] = options[:original_total]
             post[:currency] = self.default_currency
-            post[:sdkVersion] = self.sdkVersion
+            post[:sdkVersion] = self.sdk_version
 
           when :refund
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchant_id]
             post[:orderRef] = options[:order_id]
             post[:currency] = self.default_currency
-            post[:sdkVersion] = self.sdkVersion
+            post[:sdkVersion] = self.sdk_version
           
           when :query
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchant_id]
             post[:transactionIds] = options[:transaction_ids] || []
             post[:orderRefs] = options[:order_ids] || []
-            post[:sdkVersion] = self.sdkVersion
+            post[:sdkVersion] = self.sdk_version
             if options.key?(:detailed)
               post[:detailed] = options[:detailed]
             end
@@ -457,7 +480,7 @@ module ActiveMerchant #:nodoc:
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
             post[:language] = self.language
-            post[:sdkVersion] = self.sdkVersion
+            post[:sdkVersion] = self.sdk_version
             post[:methods] = ['CARD']
             post[:timeout] = generate_timeout
             post[:url] = @options[:redirect_url]
@@ -486,6 +509,13 @@ module ActiveMerchant #:nodoc:
             if options.key?(:three_ds_external)
               post[:threeDSExternal] = options[:three_ds_external]
             end
+            if options.key?(:recurring)
+              post[:recurring] = {
+                :times => options[:recurring][:times],
+                :until => options[:recurring][:until],
+                :maxAmount => options[:recurring][:max_amount]
+              }
+            end
 
           when :do
             post[:salt] = generate_salt()
@@ -494,7 +524,7 @@ module ActiveMerchant #:nodoc:
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
             post[:language] = self.language
-            post[:sdkVersion] = self.sdkVersion
+            post[:sdkVersion] = self.sdk_version
             post[:methods] = ['CARD']
             post[:total] = options[:amount]
             post[:cardId] = options[:card_id]
@@ -541,7 +571,7 @@ module ActiveMerchant #:nodoc:
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
             post[:language] = self.language
-            post[:sdkVersion] = self.sdkVersion
+            post[:sdkVersion] = self.sdk_version
             post[:methods] = ['CARD']
             post[:timeout] = generate_timeout
             post[:type] = options[:type]
@@ -555,26 +585,26 @@ module ActiveMerchant #:nodoc:
             post[:token]      = options[:token],
             post[:merchant]   = @options[:merchant_id],
             post[:salt]       = generate_salt,
-            post[:sdkVersion] = self.sdkVersion
+            post[:sdkVersion] = self.sdk_version
 
           when :tokencancel
             post[:token]      = options[:token]
             post[:merchant]   = @options[:merchant_id]
             post[:salt]       = generate_salt,
-            post[:sdkVersion] = self.sdkVersion
+            post[:sdkVersion] = self.sdk_version
         
           when :cardquery
             post[:cardId]     = options[:card_id]
             post[:history]    = options[:history] || false
             post[:merchant]   = @options[:merchant_id]
             post[:salt]       = generate_salt
-            post[:sdkVersion] = self.sdkVersion
+            post[:sdkVersion] = self.sdk_version
 
           when :cardcancel
             post[:cardId]      = options[:card_id]
             post[:merchant]   = @options[:merchant_id]
             post[:salt]       = generate_salt
-            post[:sdkVersion] = self.sdkVersion
+            post[:sdkVersion] = self.sdk_version
         end
       end
 
@@ -644,7 +674,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         if success_from(response)
-          {:order_id => response['orderRef']}
+          response['orderRef']
         else
           nil
         end
