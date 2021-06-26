@@ -441,7 +441,7 @@ module ActiveMerchant #:nodoc:
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchant_id]
             post[:transactionIds] = options[:transaction_ids] || []
-            post[:orderRefs] = options[:order_id] || []
+            post[:orderRefs] = options[:order_ids] || []
             post[:sdkVersion] = self.sdkVersion
             if options.key?(:detailed)
               post[:detailed] = options[:detailed]
@@ -603,7 +603,7 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response, parameters),
           response,
-          authorization: nil, #authorization_from(response),
+          authorization: authorization_from(response),
           avs_result: nil, #AVSResult.new(code: response['some_avs_response_key']),
           cvv_result: nil, #CVVResult.new(response['some_cvv_response_key']),
           test: test?,
@@ -639,6 +639,14 @@ module ActiveMerchant #:nodoc:
             return errors
           end
           return 'Unknown failure.'
+        end
+      end
+
+      def authorization_from(response)
+        if success_from(response)
+          {:order_id => response['orderRef']}
+        else
+          nil
         end
       end
 

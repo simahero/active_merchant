@@ -74,7 +74,7 @@ class RemoteSimplePayTest < Test::Unit::TestCase
     assert_equal 'FAIL', response.message
   end
 
-  # ACCOUNT NEEDED
+  # 2STEP ALLOWED ACCOUNT NEEDED
   # def test_successful_authorize_and_capture
   #   auth = @gateway.authorize(@amount, @credit_card, @options)
   #   assert_success auth
@@ -98,34 +98,35 @@ class RemoteSimplePayTest < Test::Unit::TestCase
   #   assert_success capture
   # end
 
-  # def test_failed_capture
-  #   response = @gateway.capture(@amount, '')
-  #   assert_failure response
-  #   assert_equal 'FAIL', response.message
-  # end
+  def test_failed_capture
+    response = @gateway.capture(@amount, '')
+    assert_failure response
+    assert_equal 'FAIL', response.message
+  end
 
-  # def test_successful_refund
-  #   purchase = @gateway.purchase(@amount, @credit_card, @options)
-  #   assert_success purchase
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
 
-  #   assert refund = @gateway.refund(@amount, purchase.authorization)
-  #   assert_success refund
-  #   assert_equal 'OK', refund.message
-  # end
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal 'OK', refund.message
+  end
 
-  # def test_partial_refund
-  #   purchase = @gateway.purchase(@amount, @credit_card, @options)
-  #   assert_success purchase
+  def test_partial_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
 
-  #   assert refund = @gateway.refund(@amount - 1, purchase.authorization)
-  #   assert_success refund
-  # end
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
+    assert_success refund
+    assert_equal 'OK', refund.message
+  end
 
-  # def test_failed_refund
-  #   response = @gateway.refund(@amount, '')
-  #   assert_failure response
-  #   assert_equal 'FAIL', response.message
-  # end
+  def test_failed_refund
+    response = @gateway.refund(@amount, '')
+    assert_failure response
+    assert_equal 'FAIL', response.message
+  end
 
   # def test_successful_void
   #   auth = @gateway.authorize(@amount, @credit_card, @options)
@@ -154,13 +155,17 @@ class RemoteSimplePayTest < Test::Unit::TestCase
   #   assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
   # end
 
-  # def test_invalid_login
-  #   gateway = SimplePayGateway.new(login: '', password: '')
+  def test_invalid_login
+    gateway = SimplePayGateway.new(
+    :merchant_id  => 'THISPROBDOESNTEXISTIFITDOESIMGONNAEATMYHAT',
+    :merchant_key => 'THESECRETFORTHENONEXISTINGMERCHANTID',
+    :redirect_url => 'https://www.example.com/back'
+    )
 
-  #   response = gateway.purchase(@amount, @credit_card, @options)
-  #   assert_failure response
-  #   assert_match %r{REPLACE WITH FAILED LOGIN MESSAGE}, response.message
-  # end
+    response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match 'FAIL', response.message
+  end
 
   # def test_dump_transcript
   #   # This test will run a purchase transaction on your gateway
