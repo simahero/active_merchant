@@ -1,0 +1,31 @@
+opening connection to sandbox.simplepay.hu:443...
+opened
+starting SSL for sandbox.simplepay.hu:443...
+SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256
+<- "POST /pay/pay/auto/pspHU HTTP/1.1\r\nContent-Type: application/json\r\nSignature: I4+DFWRBXx04/aAAbHPNrwZgjNYPvt1ielzFWv03RhENp6pnCC1hsA8s9fiSZ35X\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: sandbox.simplepay.hu\r\nContent-Length: 653\r\n\r\n"
+<- "{\"total\":100,\"cardData\":{\"number\":\"4908366099900425\",\"expiry\":\"1021\",\"cvc\":\"579\",\"holder\":\"v2 AUTO Tester\"},\"salt\":\"tuxls7r1x7w6om0ko1mkvauztijzx5on\",\"merchant\":\"PUBLICTESTHUF\",\"orderRef\":\"AMSP202106260223164155\",\"currency\":\"HUF\",\"customerEmail\":\"test@email.hu\",\"language\":\"HU\",\"sdkVersion\":\"SimplePayV2.1_Payment_PHP_SDK_2.0.7_190701:dd236896400d7463677a82a47f53e36e\",\"methods\":[\"CARD\"],\"timeout\":\"2021-06-26T02:33:16+02:00\",\"url\":\"https://127.0.0.1\",\"twoStep\":false,\"invoice\":{\"name\":\"myname\",\"company\":\"company\",\"country\":\"HU\",\"state\":\"Budapest\",\"city\":\"Budapest\",\"zip\":\"1111\",\"address1\":\"Address u.1\",\"address2\":\"Address u.2\",\"phone\":\"06301111111\"}}"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Date: Sat, 26 Jun 2021 00:23:17 GMT\r\n"
+-> "Server: JBoss-EAP/7\r\n"
+-> "Strict-Transport-Security: max-age=31536000; includeSubDomains\r\n"
+-> "X-Content-Type-Options: nosniff\r\n"
+-> "Expires: Thu, 01 Jan 1970 00:00:00 GMT\r\n"
+-> "Signature: r4FiIxoIyyS5J8GL9FrieobRLKFKoWS3TSzEDW0IfzL8lU336V5Kl2cTgnT8aQlY\r\n"
+-> "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+-> "X-Powered-By: Undertow/1\r\n"
+-> "Pragma: no-cache\r\n"
+-> "Content-Type: application/json;charset=utf-8\r\n"
+-> "Vary: Accept-Encoding,User-Agent\r\n"
+-> "Content-Encoding: gzip\r\n"
+-> "X-XSS-Protection: 1; mode=block\r\n"
+-> "X-Content-Type-Options: nosniff\r\n"
+-> "Content-Security-Policy: child-src 'none'; frame-src *; frame-ancestors 'self'\r\n"
+-> "Content-Length: 165\r\n"
+-> "Connection: close\r\n"
+-> "\r\n"
+reading 165 bytes...
+-> ""
+-> "\x1F\x8B\b\x00\x00\x00\x00\x00\x00\x03%\x8CQ\v\x820\x14F\xFF\xCB\x9E#\xEE\xAEsYo)\x86Z\x82\xA4B\xAFc.\xCAl\xC2\\FD\xFF\xBD\e=~\xE7\x1C\xBE7\xF3\xA3W\x03\xDB0\x0E\xB0\x04\xB6`\x93\x1A<M1\xEF\xB54\xA2\xCFxq\x9B\xD7\xA7\xA9\xEA\x05\x8A\x95\fRS\xF6E\x90<\xA9\x1C]g\xDC\xD1\x9C\xA9\xDE\x96u\x85\x80\x1C$J@\f\xB8\x14<\f\xA9\xB9\e\xA7/\xCA\xFE\x1E\xAB6>\xE4I\x93\xD6M\xD6\xEEH\xE9\x87s\xC6\xEA\x17\xA9?\xF0N\xD9Ii\x7F\x1Dm\xDE\x11\r\x81c$\"\x00\xF6\xF9\x02"
+-> "I!B\x90\xA7\x00\x00\x00"
+read 165 bytes
+Conn close

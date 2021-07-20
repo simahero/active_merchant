@@ -69,12 +69,19 @@ class RemoteSimplePayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_secret
+    options = {
+      :email => 'test@email.hu',
+      :address => @address,
+      :card_secret => 'uperdupercardsecret'
+    }
+    response = @gateway.purchase(@amount, nil, options)
+    assert_success response
+    assert_equal 'OK', response.message
+    
   end
 
-  def test_successful_purchase_for_card_reg
-  end
-
-  
+  # def test_successful_purchase_for_card_reg
+  # end
 
   #CANNOT BE TESTED, USER INTERACTION NEEDED
   # def test_successful_purchase_with_token
@@ -103,14 +110,14 @@ class RemoteSimplePayTest < Test::Unit::TestCase
   end
 
   # 2STEP ALLOWED ACCOUNT NEEDED
-  # def test_successful_authorize_and_capture
-  #   auth = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success auth
+  def test_successful_authorize_and_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
 
-  #   assert capture = @gateway.capture(@amount, auth.authorization)
-  #   assert_success capture
-  #   assert_equal 'OK', capture.message
-  # end
+    assert capture = @gateway.capture(@amount, auth.authorization[':order_id'])
+    assert_success capture
+    assert_equal 'OK', capture.message
+  end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
@@ -118,13 +125,13 @@ class RemoteSimplePayTest < Test::Unit::TestCase
     assert_equal 'FAIL', response.message
   end
 
-  # def test_partial_capture
-  #   auth = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success auth
+  def test_partial_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
 
-  #   assert capture = @gateway.capture(@amount - 1, auth.authorization)
-  #   assert_success capture
-  # end
+    assert capture = @gateway.capture(@amount - 1, auth.authorization[':order_id'])
+    assert_success capture
+  end
 
   def test_failed_capture
     response = @gateway.capture(@amount, {})
@@ -133,24 +140,24 @@ class RemoteSimplePayTest < Test::Unit::TestCase
   end
 
   # IDK WHY IT FAILS???????? PROB ACCOUNT PROBLEM
-  # def test_successful_refund
-  #   purchase = @gateway.purchase(@amount, @credit_card, @options)
-  #   assert_success purchase
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
 
-  #   query = @gateway.query({
-  #     :order_ids => [purchase.authorization],
-  #     :detailed => true,
-  #     :refunds => true
-  #   })
+    query = @gateway.query({
+      :order_ids => [purchase.authorization[':order_id']],
+      :detailed => true,
+      :refunds => true
+    })
 
-  #   assert refund = @gateway.refund(@amount, {:order_id => purchase.authorization})
-  #   assert_success refund
-  #   assert_equal 'OK', refund.message
-  # end
+    assert refund = @gateway.refund(@amount, {:order_id => purchase.authorization[':order_id']})
+    assert_success refund
+    assert_equal 'OK', refund.message
+  end
 
   def test_partial_refund
 
-    # Too slow till the status get's to able to be refunded.
+    # Too slow till the status get's to be able to be refunded.
     # purchase = @gateway.purchase(@amount, @credit_card, @options)
     # assert_success purchase
 

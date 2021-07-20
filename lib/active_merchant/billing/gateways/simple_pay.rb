@@ -628,6 +628,7 @@ module ActiveMerchant #:nodoc:
         puts action
         puts parameters
         puts response
+        puts "\n"
 
         Response.new(
           success_from(response),
@@ -674,7 +675,10 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         if success_from(response)
-          response['orderRef']
+          {
+            :order_id => response['orderRef'],
+            :amount => response['total']
+          }
         else
           nil
         end
